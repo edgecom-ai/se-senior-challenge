@@ -155,6 +155,7 @@ Define a clear staleness bound.
 ---
 
 ## C) Forecast Service (Python)
+Provide a small forecasting service that trains per sensor (or per site) and produces short-horizon forecasts from historical telemetry stored in TDengine (or via the shared DB adapter).
 
 * FastAPI
 * Endpoints:
