@@ -17,11 +17,8 @@ The focus is **correctness, performance, and resilience under realistic failure 
   * `README.md`
 * Tests
 * **Engineering Notes** (1–2 pages):
-
   * architecture & tradeoffs
   * bottlenecks and tuning
-  * benchmarks (machine specs included)
-  * failure scenarios tested
 
 ---
 
@@ -49,88 +46,12 @@ Write to **TDengine** (local fallback allowed via adapter).
 ### Requirements
 
 * Sustain **N events/sec** locally (you choose N and justify)
-* Batching: size- and time-based
-* Backpressure with bounded memory
-* Connection pooling, timeouts, retries w/ jitter
+* Concurrency Correctness:
+  * strictly increasing timestamps **or**
+  * latest-write-wins
 * Delivery semantics:
-
   * **at-least-once + dedupe**, or
   * **exactly-once** (explain)
-
----
-
-## Required Engineering Challenges
-
-### 1) Concurrency correctness
-
-Enforce **one per-sensor rule**:
-
-* strictly increasing timestamps **or**
-* latest-write-wins
-
-Must hold under concurrency and out-of-order input.
-Include at least one deterministic correctness test.
-
----
-
-### 2) Backpressure & memory safety
-
-Under sustained DB slowdown:
-
-* ingestion slows or sheds load
-* memory remains bounded
-* no goroutine leaks
-
-Provide evidence (metrics + profiling notes).
-
----
-
-### 3) Poison events & schema drift
-
-≥0.1% malformed events (missing fields, bad values, unknown tags).
-
-Requirements:
-
-* system must not crash
-* quarantine invalid events
-* include rejection reason codes
-
----
-
-### 4) Adaptive batching
-
-Automatically adjust batch size or flush interval based on:
-
-* DB latency
-* error/timeout rate
-* internal queue depth
-
-Must be stable (no oscillation); explain logic.
-
----
-
-### 5) Multi-tenant fairness
-
-One noisy tenant must not starve others.
-
-Implement:
-
-* weighted fair scheduling **or**
-* per-tenant rate limiting
-
-Demonstrate with a test or load scenario.
-
----
-
-### 6) Restart & recovery behavior
-
-On restart:
-
-* ingestion resumes safely
-* duplicates don’t violate correctness guarantees
-* partially flushed batches are handled explicitly
-
-Document guarantees and limitations.
 
 ---
 
@@ -146,11 +67,9 @@ Document guarantees and limitations.
 ### Caching
 
 * Bounded LRU + TTL
-* Expose metrics: hit rate, evictions, stale reads (if any)
-
-**Correctness constraint:** cached aggregates must never return impossible values
+* Correctness: cached aggregates must never return impossible values
 (e.g. negative energy, decreasing cumulative metrics).
-Define a clear staleness bound.
+* Define a clear staleness bound.
 
 ---
 
@@ -159,11 +78,9 @@ Provide a small forecasting service that trains per sensor (or per site) and pro
 
 * FastAPI
 * Endpoints:
-
   * `POST /train?sensor_id=...`
   * `GET /predict?sensor_id=...&horizon=60m&step=1m`
 * Model can be simple, but must:
-
   * handle missing data and outliers
   * version artifacts per sensor/site
   * produce reproducible predictions
@@ -180,10 +97,7 @@ Identify and fix **one non-trivial bug**, e.g.:
 * cache inconsistency
 * batching edge case
 
-Include:
-
-* failing test or benchmark
-* short write-up: symptoms → diagnosis → fix
+Include a short write-up that explains the symptoms, the process for diagnosising, and steps taken to fix.
 
 ---
 
@@ -194,12 +108,6 @@ Include:
   ```
   docker compose up
   ```
-* Include:
-
-  * health checks
-  * structured logs
-  * Prometheus-style metrics
-* Provide at least one load run with observed metrics
 
 ---
 
@@ -209,6 +117,5 @@ Include:
 * Sustained and burst performance
 * Failure-mode reasoning
 * Quality of tradeoffs and documentation
-* Operational maturity
 
 **Depth and correctness matter more than feature count.**
